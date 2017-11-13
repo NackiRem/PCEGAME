@@ -39,6 +39,7 @@ _ProcWinMain 	proc	uses ebx edi esi, hWnd, uMsg,wParam,lParam
 			invoke	PostQuitMessage, NULL
 		.else
 			invoke	DefWindowProc, hWnd, uMsg, wParam, lParam
+			ret
 		.endif
 		
 		xor	eax,eax
@@ -56,9 +57,9 @@ _WinMain	proc
 ;注册窗口类
 ;------------------------
 		invoke 	LoadCursor, 0, IDC_ARROW
-		mov	@stWndClass.hCursor,eax
+		mov		@stWndClass.hCursor,eax
 		push	hInstance
-		pop	@stWndClass.hInstance
+		pop		@stWndClass.hInstance
 		mov 	@stWndClass.cbSize, sizeof WNDCLASSEX
 		mov    	@stWndClass.style, CS_HREDRAW or CS_VREDRAW
 		mov  	@stWndClass.lpfnWndProc, offset _ProcWinMain
@@ -81,7 +82,7 @@ _WinMain	proc
 			invoke 	TranslateMessage, addr @stMsg
 			invoke 	DispatchMessage, addr @stMsg
 			.endw
-			ret
+		ret
 _WinMain 	endp
 
 start:
