@@ -1,0 +1,7 @@
+#include <resource.h>
+
+#define 	IDB_START		100
+
+
+
+IDB_START		BITMAP			"START.bmp"
