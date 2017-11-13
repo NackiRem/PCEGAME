@@ -15,7 +15,9 @@ hInstance 		dd		?
 hWinMain 		dd  	?
 
 .data
-
+szClassName		db		'Myclass', 0
+szCaptionMain	db		'My first Window!', 0
+szText			db		'Win32 Assembly, Simple and powerful !', 0
 
 
 .code
@@ -30,9 +32,7 @@ _ProcWinMain 	proc	uses ebx edi esi, hWnd, uMsg,wParam,lParam
 			mov	@hDc, eax
 
 			invoke	GetClientRect, hWnd, addr @stRect
-			invoke	DrawText, @hDc, addr szText,-1,\
-				addr @stRect, \
-				DT_SINGALLINE or DT_CENTER or DT_VCENTER
+			invoke	DrawText, @hDc, addr szText,-1, addr @stRect, DT_SINGLELINE or DT_CENTER or DT_VCENTER
 			invoke	EndPaint, hWnd, addr @stPs
 		.elseif	eax == WM_CLOSE
 			invoke	DestroyWindow, hWinMain
@@ -51,7 +51,7 @@ _WinMain	proc
 
 		invoke	GetModuleHandle, NULL
 		mov 	hInstance, eax
-		invoke`	RtlZeroMemory, addr @stWndClass, sizeof @stWndClass
+		invoke	RtlZeroMemory, addr @stWndClass, sizeof @stWndClass
 ;------------------------
 ;注册窗口类
 ;------------------------
@@ -69,7 +69,25 @@ _WinMain	proc
 ;建立并显示窗口
 ;-----------------------
 		invoke	CreateWindowEx, WS_EX_CLIENTEDGE, offset szClassName, offset szCaptionMain, WS_OVERLAPPEDWINDOW, 100, 100, 600, 400, NULL, NULL, hInstance, NULL
-		mov 	hWinMain, 
+		mov 	hWinMain, eax
+		invoke	ShowWindow, hWinMain, SW_SHOWNORMAL
+		invoke 	UpdateWindow, hWinMain
+;-----------------------
+;消息循环
+;-----------------------
+		.while	TRUE
+			invoke	GetMessage, addr @stMsg, NULL, 0, 0
+			.break	.if eax == 0
+			invoke 	TranslateMessage, addr @stMsg
+			invoke 	DispatchMessage, addr @stMsg
+			.endw
+			ret
+_WinMain 	endp
+
+start:
+		call 	_WinMain
+		invoke 	ExitProcess, NULL
+		end 	start
 
 
 
