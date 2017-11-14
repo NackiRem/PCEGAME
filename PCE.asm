@@ -14,6 +14,48 @@ includelib 		kernel32.lib
 ;equ等值定义
 ;---------------------------
 IDB_START		equ 	100
+WINDOWS_WIDTH	equ 	500
+WINDOWS_HEIGHT 	equ 	700
+
+TIMER_ID 		equ 	1
+TIMER_ELAPSE 	equ 	10
+
+HERO_SIZE_X 		equ 	40
+HERO_SIZE_Y 		equ 	65
+HERO_MAX_FRAME_NUM 	equ 	12
+BRICK_SIZE_X 		equ 	75
+BRICK_SIZE_Y 		equ 	75
+BACKGROUND_SIZE_X 	equ 	500
+BACKGROUND_SIZE_Y 	equ 	700
+BLOCK_COLOR_NUM 	equ 	5
+BLOCK_NUM_X 		equ 	10
+BLOCK_NUM_Y 		equ 	20
+
+
+;---------------------------
+;结构体定义
+;---------------------------
+Hero struct
+  hBmp 			HBITMAP ?
+  pos 			POINT 	<>
+  h_size		_SIZE 	<>
+  curFrameIndex dd 	 	?
+  maxFrameSize 	dd 		?
+  speed_x 		dd 		?
+  speed_y		dd 		?
+  g 			dd 		?
+Hero ends
+
+Brick struct
+  hBmp 			HBITMAP ?
+  pos 			POINT 	<>
+  b_size		_SIZE 	<>
+  color 		dd 		?
+  clicked 		dd 		?
+  speed_x		dd 		?
+  speed_y 		dd 		?
+  g 			dd 		?
+Brick ends
 
 
 ;---------------------------
@@ -26,14 +68,13 @@ hWinMain 		dd  	?
 .data
 szClassName		db		'Myclass', 0
 szCaptionMain	db		'My first Window!', 0
-szText			db		'Win32 Assembly, Simple and powerful !', 0
-gameStatus		dd 		0
 
-.const
-WINDOWS_X		dd 		100
-WINDOWS_Y		dd 		100
-WINDOWS_WIDTH	dd		600
-WINDOWS_HEIGHT	dd		400
+;全局变量：
+;gameStatus: 0--游戏开始界面, 1--游戏中，2--游戏结束
+gameStatus		dd 		0
+TotalGrade  	dd  	0
+MapStartX  		dd      -125
+MapStartY  		dd  	300
 
 ;---------------------------
 ;代码段
@@ -45,7 +86,7 @@ _InitWindows	proc 	hWnd, wParam, lParam
 _InitWindows 	endp
 
 
-_StartRender proc uses ebx edi esi, hWnd
+_StartRender 	proc uses ebx edi esi, hWnd
 		local	@stPs:PAINTSTRUCT, @hdc, @hdcBmp, @hdcBuffer
 		local	@cptBmp, @m_hStartBmp
 		pushad
@@ -86,6 +127,24 @@ OverRender proc uses ebx edi esi, hWnd
 		ret
 OverRender endp
 
+LButtonDown 	proc, 	hWnd, wParam, lParam
+		local	@ptMouse:POINT
+		pushad
+
+		invoke 	LOWORD, lParam
+		mov		ptMouse, eax
+		invoke 	HIWORD, lParam
+		mov 	ptMouse, eax
+
+		.if  gameStatus == 0
+			mov 	gameStatus, 1
+
+		.endif
+
+		popad
+		ret
+LButtonDown 	endp
+
 
 _ProcWinMain 	proc	uses ebx edi esi ebp, hWnd, uMsg,wParam,lParam
 		local	@stPs:PAINTSTRUCT
@@ -98,13 +157,17 @@ _ProcWinMain 	proc	uses ebx edi esi ebp, hWnd, uMsg,wParam,lParam
 		.elseif	eax == WM_PAINT
 			.if gameStatus == 0
 				invoke _StartRender, hWnd
-			.endif
-			; invoke	BeginPaint, hWnd, addr @stPs
-			; mov	@hDc, eax
+			.elseif gameStatus == 1
 
-			; invoke	GetClientRect, hWnd, addr @stRect
-			; invoke	DrawText, @hDc, addr szText,-1, addr @stRect, DT_SINGLELINE or DT_CENTER or DT_VCENTER
-			; invoke	EndPaint, hWnd, addr @stPs
+			.endif
+		.elseif eax == WM_KEYDOWN
+
+		.elseif eax == WM_KEYUP
+
+		.elseif eax == WM_LBUTTONDOWN
+
+		.elseif eax == WM_TIMER
+
 		.elseif	eax == WM_CLOSE
 			invoke	DestroyWindow, hWinMain
 			invoke	PostQuitMessage, NULL
@@ -159,7 +222,9 @@ _WinMain 	endp
 start:
 		call 	_WinMain
 		invoke 	ExitProcess, NULL
-		end 	start
+end 	start
+
+
 
 
 

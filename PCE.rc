@@ -1,0 +1,20 @@
+#include <resource.h>
+
+
+#define 	IDB_START			100
+#define		IDB_BACK			101
+#define		IDB_BRICK_BLUE		102
+#define 	IDB_BRICK_GREEN		103
+#define 	IDB_BRICK_RED		104
+#define 	IDB_BRICK_STONE		105
+#define		IDB_BRICK_YELLOW	106
+
+
+IDB_START				BITMAP			"START.bmp"
+IDB_BACK				BITMAP			"background.bmp"
+IDB_BRICK_BLUE			BITMAP			"brick_blue.bmp"
+IDB_BRICK_GREEN			BITMAP			"brick_green.bmp"
+IDB_BRICK_RED			BITMAP			"brick_red.bmp"
+IDB_BRICK_STONE			BITMAP			"brick_stone.bmp"
+IDB_BRICK_YELLOW		BITMAP			"brick_yellow.bmp"
+
