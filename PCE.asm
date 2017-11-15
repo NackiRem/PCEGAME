@@ -17,11 +17,13 @@ IDB_START			equ 	100
 IDB_BACKGROUND  	equ 	101
 IDB_BLUE_BRICK  	equ  	102
 IDB_GREEN_BRICK  	equ  	103
-IDB_RED_BRICK  		equ  	104
+IDB_PURPLE_BRICK	equ  	104
 IDB_STONE_BRICK  	equ 	105
 IDB_YELLOW_BRICK  	equ  	106
 IDB_HERO  			equ 	107
 
+WINDOWS_X 		equ 	100
+WINDOWS_Y 		equ 	100
 WINDOWS_WIDTH	equ 	500
 WINDOWS_HEIGHT 	equ 	700
 
@@ -60,6 +62,7 @@ Brick struct
   b_size		_SIZE 	<>
   color 		dd 		?
   clicked 		dd 		?
+  painted 		dd 		?
   speed_x		dd 		?
   speed_y 		dd 		?
   g 			dd 		?
@@ -74,13 +77,9 @@ hInstance 		dd		?
 hWinMain 		dd  	?
 ;位图句柄
 ;---------------------------
-m_hBackBmp				dd 	?
-m_hHeroBmp				dd 	?
-m_hBlueBlockBmp			dd 	?
-m_hGreenBlockBmp		dd 	?
-m_hPurpleBlockBmp		dd 	?
-m_hStoneBlockBmp		dd 	?
-m_hYellowBlockBmp		dd 	?
+m_BackgroundBmp		dd 	?
+m_HeroBmp			dd 	?
+m_BrickBmp  		dd  5 DUP(?)
 
 
 
@@ -98,6 +97,26 @@ m_brickBmpNames dd  IDB_BLUE_BRICK, IDB_RED_BRICK, IDB_GREEN_BRICK, IDB_STONE_BR
 
 m_hero 			Hero 	<>
 m_Map 			Brick 	10 	DUP(<>)
+RowSize = $ - m_Map
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
+      Brick 10 DUP(<>)
 
 
 ;---------------------------
@@ -151,20 +170,31 @@ CreateMap proc
 CreateMap endp
 
 Init	proc 	uses ebx edi esi, hWnd, wParam, lParam
-		invoke	LoadBitmap, hInstance, IDB_BACK
-		mov 	m_hBackBmp, eax
-		invoke	LoadBitmap, hInstance, IDB_BRICK_BLUE
-		mov 	m_hBlueBlockBmp, eax
-		invoke	LoadBitmap, hInstance, IDB_BRICK_GREEN
-		mov 	m_hGreenBlockBmp, eax
-		invoke	LoadBitmap, hInstance, IDB_BRICK_PURPLE
-		mov 	m_hPurpleBlockBmp, eax
-		invoke	LoadBitmap, hInstance, IDB_BRICK_STONE
-		mov 	m_hStoneBlockBmp, eax
-		invoke	LoadBitmap, hInstance, IDB_BRICK_YELLOW
-		mov 	m_hYellowBlockBmp, eax
+		local	@tmp, @offset1, @offset2
+		invoke	LoadBitmap, hInstance, IDB_BACKGROUND
+		mov 	m_BackgroundBmp, eax
+		mov		@tmp, 0
+		.while 	TRUE
+			mov		eax, OFFSET m_BrickBmp
+			add 	eax, @tmp
+			mov 	@offset1, eax
+
+			mov 	eax, OFFSET m_brickBmpNames
+			add 	eax, @tmp
+			mov 	@offset2, eax
+
+			invoke 	LoadBitmap, hInstance, [@offset2]
+			mov		[@offset1], eax
+
+			mov 	eax, @tmp
+			inc 	eax
+			mov 	@tmp, eax
+			.break .if eax == BLOCK_COLOR_NUM
+		.endw
+
+
 		invoke	LoadBitmap, hInstance, IDB_HERO
-		mov 	m_hHeroBmp, eax
+		mov 	m_HeroBmp, eax
 
 
 		invoke	InvalidateRect, hWnd, NULL, FALSE
@@ -208,9 +238,29 @@ Render proc uses ebx edi esi, hWnd
 		local 	@stPs:PAINTSTRUCT, @hdc, @hdcBmp, @hdcBuffer
 		local 	@cptBmp
 		pushad
+		invoke 	BeginPaint, hWnd, addr @stPs
+		mov 	@hdc, eax
+		invoke 	CreateCompatibleBitmap, @hdc, WINDOWS_WIDTH, WINDOWS_HEIGHT
+		mov 	@cptBmp, eax
+		invoke 	CreateCompatibleDC, @hdc
+		mov 	@hdcBmp, eax
+		invoke 	CreateCompatibleDC, @hdc
+		mov 	@hdcBuffer, eax
+		invoke 	SelectObject, @hdcBuffer, @cptBmp
+		invoke 	SelectObject, @hdcBmp, m_BackgroundBmp
+		invoke 	BitBlt, @hdcBuffer, 0, 0, WINDOWS_WIDTH, WINDOWS_HEIGHT, @hdcBmp, 0, 0, SRCCOPY
 
 
+		;将缓冲区的信息绘制到屏幕上
+		invoke 	BitBlt, @hdc, 0, 0, WINDOWS_WIDTH, WINDOWS_HEIGHT, @hdcBuffer, 0, 0, SRCCOPY
 
+		;回收资源所占的内存
+		invoke 	DeleteObject, @cptBmp
+		invoke 	DeleteDC, @hdcBuffer
+		invoke 	DeleteDC, @hdcBmp
+
+		;结束绘制
+		invoke 	EndPaint, hWnd, addr @stPs
 		popad
 		ret
 Render endp
@@ -268,15 +318,8 @@ KeyUp endp
 LButtonDown 	proc, 	hWnd, wParam, lParam
 		local	@ptMouse:POINT
 		pushad
-
-		invoke 	LOWORD, lParam
-		mov		ptMouse, eax
-		invoke 	HIWORD, lParam
-		mov 	ptMouse, eax
-
 		.if  GameState == 0
-			mov 	eax, 1
-			mov 	GameState, eax
+			mov 	GameState, 1
 			invoke	Render, hWnd
 		.endif
 

@@ -5,7 +5,7 @@
 #define		IDB_BACKGROUND		101
 #define		IDB_BLUE_BRICK		102
 #define 	IDB_GREEN_BRICK		103
-#define 	IDB_RED_BRICK		104
+#define 	IDB_PURPLE_BRICK	104
 #define 	IDB_STONE_BRICK		105
 #define		IDB_YELLOW_BRICK	106
 #define		IDB_HERO			107
@@ -15,7 +15,7 @@ IDB_START				BITMAP			"START.bmp"
 IDB_BACKGROUND			BITMAP			"background.bmp"
 IDB_BLUE_BRICK			BITMAP			"brick_blue.bmp"
 IDB_GREEN_BRICK			BITMAP			"brick_green.bmp"
-IDB_RED_BRICK			BITMAP			"brick_purple.bmp"
+IDB_PURPLE_BRICK		BITMAP			"brick_purple.bmp"
 IDB_STONE_BRICK			BITMAP			"brick_stone.bmp"
 IDB_YELLOW_BRICK		BITMAP			"brick_yellow.bmp"
 IDB_HERO 				BITMAP 			"hero.bmp"
